@@ -6,6 +6,13 @@ for each query:
 1. Path that minimises total distance
 2. Path that minimises total travel time
 
+The codebase is now split into separate modules:
+- `graph_models.py`: graph data structures and graph conversion helpers
+- `path_finder.py`: Dijkstra-based route search
+- `app.py`: graph generation, CLI helpers, benchmarking, and visualization
+- `main.py`: command-line entrypoint
+- `smart_path_finder.py`: compatibility wrapper that re-exports the main classes
+
 Graph model
 - Nodes represent locations
 - Undirected edges represent roads
@@ -24,6 +31,9 @@ Environment setup
 How to run
 1) Demo mode (default):
    python main.py
+
+  You can also run the legacy wrapper:
+  python smart_path_finder.py
 
 2) Interactive mode:
    python main.py --mode interactive --nodes 3000 --avg-degree 4
@@ -60,7 +70,6 @@ CLI arguments:
 - `--nodes`: number of nodes in generated graph
 - `--avg-degree`: target average degree
 - `--seed`: random seed for reproducibility
-- `--mode`: `demo`, `interactive`, `query`, `benchmark`
 - `--mode`: `demo`, `interactive`, `query`, `benchmark`, `visualize`
 - `--source`, `--destination`: query endpoints (required in `query` mode)
 - `--departure-hour`: hour for time-dependent edge traversal
@@ -97,6 +106,12 @@ Design notes
 - Two graph data structures are implemented:
   - adjacency list (`RoadGraph`)
   - compact array-based forward-star representation (`CompactRoadGraph`)
+
+Module responsibilities
+- `graph_models.py` contains the graph containers plus `PathResult` and `Edge`.
+- `path_finder.py` contains `SmartPathFinder` and the route-selection logic.
+- `app.py` contains graph generation, parsing helpers, visualization, benchmark
+  routines, and the main CLI flow.
 
 Technical report guidance (rubric-aligned)
 
