@@ -14,23 +14,24 @@
 2) Interactive mode:
 ```bash
    python main.py --mode interactive --nodes 3000 --avg-degree 4
-   ```
+```
 
 3) Query mode (explicit input):
+
 ```bash
    python main.py --mode query --nodes 3000 --source 10 --destination 120 \
      --departure-hour 8 --avoid-nodes 11,12 --avoid-edges 20-21,22-23
-    ```
+```
 
 4) Benchmark mode:
 ```bash
    python main.py --mode benchmark --nodes 3000 --benchmark-queries 50
-   ```
+```
 
 5) Try different data structures:
 ```bash
  python main.py --mode benchmark --nodes 3000 --graph-structure list
- 
+
   python main.py --mode benchmark --nodes 3000 --graph-structure compact
 
   python main.py --mode benchmark --nodes 3000 --graph-structure both
