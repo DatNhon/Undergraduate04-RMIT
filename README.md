@@ -28,7 +28,9 @@
    ```
 
 5) Try different data structures:
-```bash python main.py --mode benchmark --nodes 3000 --graph-structure list
+```bash
+ python main.py --mode benchmark --nodes 3000 --graph-structure list
+ 
   python main.py --mode benchmark --nodes 3000 --graph-structure compact
 
   python main.py --mode benchmark --nodes 3000 --graph-structure both
