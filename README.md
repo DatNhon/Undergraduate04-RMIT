@@ -14,6 +14,8 @@
 2) Interactive mode:
 ```bash
    python main.py --mode interactive --nodes 3000 --avg-degree 4
+   # Use BFS instead of Dijkstra
+   python main.py --mode interactive --nodes 3000 --avg-degree 4 --algorithm bfs
 ```
 
 3) Query mode (explicit input):
@@ -21,11 +23,16 @@
 ```bash
    python main.py --mode query --nodes 3000 --source 10 --destination 120 \
      --departure-hour 8 --avoid-nodes 11,12 --avoid-edges 20-21,22-23
+    # Use BFS instead of Dijkstra
+    python main.py --mode query --algorithm bfs --nodes 3000 --source 10 --destination 120 \
+       --departure-hour 8 --avoid-nodes 11,12 --avoid-edges 20-21,22-23
 ```
 
 4) Benchmark mode:
 ```bash
    python main.py --mode benchmark --nodes 3000 --benchmark-queries 50
+   # Use BFS instead of Dijkstra
+   python main.py --mode benchmark --algorithm bfs --nodes 3000 --benchmark-queries 50
 ```
 
 5) Try different data structures:
@@ -40,6 +47,8 @@
 6) Visualize nodes/graph (PNG output):
 ```bash 
 python main.py --mode visualize --nodes 1200 --output-image map.png
+ # Use BFS instead of Dijkstra
+ python main.py --mode visualize --algorithm bfs --nodes 1200 --output-image bfs_map.png
 ```
 
 7) Visualize with a query path overlay:
@@ -47,4 +56,8 @@ python main.py --mode visualize --nodes 1200 --output-image map.png
  python main.py --mode visualize --nodes 1200 --source 5 --destination 980 \
     --departure-hour 8 --avoid-nodes 12,13 --avoid-edges 20-21,40-41 \
     --output-image map_with_paths.png
+   # Use BFS instead of Dijkstra
+   python main.py --mode visualize --algorithm bfs --nodes 1200 --source 5 --destination 980 \
+      --departure-hour 8 --avoid-nodes 12,13 --avoid-edges 20-21,40-41 \
+      --output-image bfs_map_with_paths.png
 ```

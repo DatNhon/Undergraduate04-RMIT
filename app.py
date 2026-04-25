@@ -5,6 +5,7 @@ from random import Random
 from time import perf_counter
 from typing import List, Optional, Sequence, Set, Tuple
 
+from bfs_path_finder import BfsPathFinder
 from graph_models import CompactRoadGraph, PathResult, RoadGraph
 from path_finder import SmartPathFinder
 
@@ -167,6 +168,32 @@ def run_single_query(
     print_path_result("Time-optimised path:", time_path)
 
 
+def run_single_query_bfs(
+    path_finder: BfsPathFinder,
+    source: int,
+    destination: int,
+    departure_hour: int,
+    avoid_nodes: Sequence[int],
+    avoid_edges: Sequence[Tuple[int, int]],
+) -> None:
+    print("Query (BFS):")
+    print(f"  source={source}")
+    print(f"  destination={destination}")
+    print(f"  departure_hour={departure_hour}")
+    print(f"  avoid_nodes={list(avoid_nodes)}")
+    print(f"  avoid_edges={list(avoid_edges)}")
+
+    bfs_path = path_finder.route(
+        source=source,
+        destination=destination,
+        departure_hour=departure_hour,
+        avoid_nodes=avoid_nodes,
+        avoid_edges=avoid_edges,
+    )
+
+    print_path_result("BFS path (fewest edges):", bfs_path)
+
+
 def run_benchmark(
     path_finder: SmartPathFinder,
     node_count: int,
@@ -212,6 +239,48 @@ def run_benchmark(
     print(
         "  average runtime per query "
         f"(both optimisations): {total_distance_mode / query_count:.6f} sec"
+    )
+
+
+def run_benchmark_bfs(
+    path_finder: BfsPathFinder,
+    node_count: int,
+    query_count: int,
+    seed: int,
+    label: str,
+) -> None:
+    rng = Random(seed)
+
+    total_elapsed = 0.0
+    success = 0
+
+    for _ in range(query_count):
+        source = rng.randrange(node_count)
+        destination = rng.randrange(node_count)
+        while destination == source:
+            destination = rng.randrange(node_count)
+
+        departure_hour = rng.randrange(24)
+
+        start = perf_counter()
+        bfs_path = path_finder.route(
+            source,
+            destination,
+            departure_hour,
+        )
+        elapsed = perf_counter() - start
+
+        if bfs_path is not None:
+            success += 1
+
+        total_elapsed += elapsed
+
+    print(f"Benchmark summary (BFS, {label}):")
+    print(f"  queries={query_count}")
+    print(f"  feasible BFS paths={success}/{query_count}")
+    print(
+        "  average runtime per query: "
+        f"{total_elapsed / query_count:.6f} sec"
     )
 
 
@@ -311,6 +380,27 @@ def interactive_mode(path_finder: SmartPathFinder) -> None:
     )
 
 
+def interactive_mode_bfs(path_finder: BfsPathFinder) -> None:
+    print("Enter query values (BFS).")
+    source = int(input("source node: ").strip())
+    destination = int(input("destination node: ").strip())
+    departure_hour = int(input("departure hour [0..23]: ").strip())
+    avoid_nodes_raw = input("avoid nodes (comma list, optional): ").strip()
+    avoid_edges_raw = input("avoid edges (u-v,u-v, optional): ").strip()
+
+    avoid_nodes = parse_int_list(avoid_nodes_raw)
+    avoid_edges = parse_edge_list(avoid_edges_raw)
+
+    run_single_query_bfs(
+        path_finder,
+        source,
+        destination,
+        departure_hour,
+        avoid_nodes,
+        avoid_edges,
+    )
+
+
 def run_demo(path_finder: SmartPathFinder, node_count: int, seed: int) -> None:
     rng = Random(seed)
     source = rng.randrange(node_count)
@@ -329,6 +419,37 @@ def run_demo(path_finder: SmartPathFinder, node_count: int, seed: int) -> None:
     ]
 
     run_single_query(
+        path_finder,
+        source,
+        destination,
+        departure_hour,
+        avoid_nodes,
+        avoid_edges,
+    )
+
+
+def run_demo_bfs(
+    path_finder: BfsPathFinder,
+    node_count: int,
+    seed: int,
+) -> None:
+    rng = Random(seed)
+    source = rng.randrange(node_count)
+    destination = rng.randrange(node_count)
+    while destination == source:
+        destination = rng.randrange(node_count)
+
+    departure_hour = 8
+    avoid_nodes = [
+        rng.randrange(node_count)
+        for _ in range(2)
+    ]
+    avoid_edges = [
+        (rng.randrange(node_count), rng.randrange(node_count))
+        for _ in range(2)
+    ]
+
+    run_single_query_bfs(
         path_finder,
         source,
         destination,
@@ -519,6 +640,43 @@ def run_visualization(
     print(f"Saved visualization image to: {output_image}")
 
 
+def run_visualization_bfs(
+    path_finder: BfsPathFinder,
+    source: Optional[int],
+    destination: Optional[int],
+    departure_hour: int,
+    avoid_nodes: Sequence[int],
+    avoid_edges: Sequence[Tuple[int, int]],
+    output_image: str,
+    image_width: int,
+    image_height: int,
+) -> None:
+    bfs_path: Optional[PathResult] = None
+
+    if source is not None and destination is not None:
+        bfs_path = path_finder.route(
+            source=source,
+            destination=destination,
+            departure_hour=departure_hour,
+            avoid_nodes=avoid_nodes,
+            avoid_edges=avoid_edges,
+        )
+        print_path_result("BFS path (fewest edges):", bfs_path)
+
+    render_graph_image(
+        graph=path_finder.graph,
+        output_path=output_image,
+        image_width=image_width,
+        image_height=image_height,
+        distance_path=bfs_path,
+        time_path=None,
+        source=source,
+        destination=destination,
+        avoid_nodes=avoid_nodes,
+    )
+    print(f"Saved visualization image to: {output_image}")
+
+
 def main() -> None:
     import argparse
 
@@ -599,6 +757,12 @@ def main() -> None:
         default="list",
         help="graph data structure: adjacency list, compact arrays, or both",
     )
+    parser.add_argument(
+        "--algorithm",
+        choices=("dijkstra", "bfs"),
+        default="dijkstra",
+        help="pathfinding algorithm to use",
+    )
     args = parser.parse_args()
 
     print(
@@ -630,52 +794,93 @@ def main() -> None:
     else:
         active_graph = graph
 
-    path_finder = SmartPathFinder(active_graph)
+    if args.algorithm == "bfs":
+        path_finder = BfsPathFinder(active_graph)
+    else:
+        path_finder = SmartPathFinder(active_graph)
     print("Graph ready.")
 
     if args.mode == "benchmark":
-        run_benchmark(
-            path_finder=path_finder,
-            node_count=args.nodes,
-            query_count=args.benchmark_queries,
-            seed=args.seed + 1000,
-            label=args.graph_structure,
-        )
+        if args.algorithm == "bfs":
+            run_benchmark_bfs(
+                path_finder=path_finder,
+                node_count=args.nodes,
+                query_count=args.benchmark_queries,
+                seed=args.seed + 1000,
+                label=args.graph_structure,
+            )
+        else:
+            run_benchmark(
+                path_finder=path_finder,
+                node_count=args.nodes,
+                query_count=args.benchmark_queries,
+                seed=args.seed + 1000,
+                label=args.graph_structure,
+            )
         return
 
     if args.mode == "interactive":
-        interactive_mode(path_finder)
+        if args.algorithm == "bfs":
+            interactive_mode_bfs(path_finder)
+        else:
+            interactive_mode(path_finder)
         return
 
     if args.mode == "query":
         if args.source is None or args.destination is None:
             raise ValueError("query mode requires --source and --destination")
 
-        run_single_query(
-            path_finder=path_finder,
-            source=args.source,
-            destination=args.destination,
-            departure_hour=args.departure_hour,
-            avoid_nodes=parse_int_list(args.avoid_nodes),
-            avoid_edges=parse_edge_list(args.avoid_edges),
-        )
+        if args.algorithm == "bfs":
+            run_single_query_bfs(
+                path_finder=path_finder,
+                source=args.source,
+                destination=args.destination,
+                departure_hour=args.departure_hour,
+                avoid_nodes=parse_int_list(args.avoid_nodes),
+                avoid_edges=parse_edge_list(args.avoid_edges),
+            )
+        else:
+            run_single_query(
+                path_finder=path_finder,
+                source=args.source,
+                destination=args.destination,
+                departure_hour=args.departure_hour,
+                avoid_nodes=parse_int_list(args.avoid_nodes),
+                avoid_edges=parse_edge_list(args.avoid_edges),
+            )
         return
 
     if args.mode == "visualize":
-        run_visualization(
-            path_finder=path_finder,
-            source=args.source,
-            destination=args.destination,
-            departure_hour=args.departure_hour,
-            avoid_nodes=parse_int_list(args.avoid_nodes),
-            avoid_edges=parse_edge_list(args.avoid_edges),
-            output_image=args.output_image,
-            image_width=args.image_width,
-            image_height=args.image_height,
-        )
+        if args.algorithm == "bfs":
+            run_visualization_bfs(
+                path_finder=path_finder,
+                source=args.source,
+                destination=args.destination,
+                departure_hour=args.departure_hour,
+                avoid_nodes=parse_int_list(args.avoid_nodes),
+                avoid_edges=parse_edge_list(args.avoid_edges),
+                output_image=args.output_image,
+                image_width=args.image_width,
+                image_height=args.image_height,
+            )
+        else:
+            run_visualization(
+                path_finder=path_finder,
+                source=args.source,
+                destination=args.destination,
+                departure_hour=args.departure_hour,
+                avoid_nodes=parse_int_list(args.avoid_nodes),
+                avoid_edges=parse_edge_list(args.avoid_edges),
+                output_image=args.output_image,
+                image_width=args.image_width,
+                image_height=args.image_height,
+            )
         return
 
-    run_demo(path_finder, args.nodes, args.seed + 2000)
+    if args.algorithm == "bfs":
+        run_demo_bfs(path_finder, args.nodes, args.seed + 2000)
+    else:
+        run_demo(path_finder, args.nodes, args.seed + 2000)
 
 
 if __name__ == "__main__":
