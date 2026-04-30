@@ -1,50 +1,92 @@
 # Undergraduate04-RMIT
 
-## How to run
-1) Demo mode (default):
-```bash
-   python main.py
-   ```
+Smart Path Finder: Time-dependent shortest path routing with Dijkstra's algorithm.
 
-  You can also run the legacy wrapper:
+## Requirements
+
+- **Python 3.10+** (no external dependencies)
+
+## Setup
+
 ```bash
-  python smart_path_finder.py
+# Clone and navigate to project directory
+cd Assignment_group
+
+# Run directly (no installation needed)
+python main.py
 ```
 
-2) Interactive mode:
+## How to Run
+
+### 1. Demo Mode (default)
+Generates a random route with constraints:
 ```bash
-   python main.py --mode interactive --nodes 3000 --avg-degree 4
+python main.py
 ```
 
-3) Query mode (explicit input):
-
+### 2. Interactive Mode
+Prompts for source, destination, departure hour, and constraints:
 ```bash
-   python main.py --mode query --nodes 3000 --source 10 --destination 120 \
-     --departure-hour 8 --avoid-nodes 11,12 --avoid-edges 20-21,22-23
+python main.py --mode interactive
 ```
 
-4) Benchmark mode:
+### 3. Query Mode
+Specify exact endpoints and parameters:
 ```bash
-   python main.py --mode benchmark --nodes 3000 --benchmark-queries 50
+python main.py --mode query --source 10 --destination 120 \
+  --departure-hour 8 --avoid-nodes 11,12 --avoid-edges 20-21,22-23
 ```
 
-5) Try different data structures:
+### 4. Benchmark Mode
+Run performance tests on random queries:
 ```bash
- python main.py --mode benchmark --nodes 3000 --graph-structure list
-
-  python main.py --mode benchmark --nodes 3000 --graph-structure compact
-
-  python main.py --mode benchmark --nodes 3000 --graph-structure both
-  ```
-
-6) Visualize nodes/graph (PNG output):
-```bash 
-python main.py --mode visualize --nodes 1200 --output-image map.png
+python main.py --mode benchmark --benchmark-queries 100
 ```
 
-7) Visualize with a query path overlay:
+### 5. Compare Graph Structures
+Test list vs compact graph representations:
 ```bash
- python main.py --mode visualize --nodes 1200 --source 5 --destination 980 \
-    --departure-hour 8 --avoid-nodes 12,13 --avoid-edges 20-21,40-41 \
-    --output-image map_with_paths.png
+python main.py --mode benchmark --nodes 3000 --graph-structure both
+```
+
+## Options
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--mode` | demo | Execution mode: demo, interactive, query, benchmark |
+| `--nodes` | 3000 | Number of nodes in generated graph |
+| `--avg-degree` | 4 | Average node degree |
+| `--seed` | 42 | Random seed for reproducibility |
+| `--source` | - | Start node (required in query mode) |
+| `--destination` | - | End node (required in query mode) |
+| `--departure-hour` | 8 | Departure hour (0-23) |
+| `--avoid-nodes` | - | Comma-separated nodes to avoid (e.g., `11,12,13`) |
+| `--avoid-edges` | - | Comma-separated edges to avoid (e.g., `20-21,22-23`) |
+| `--benchmark-queries` | 50 | Number of random queries to run in benchmark |
+| `--graph-structure` | list | Graph representation: list, compact, or both |
+
+## Output
+
+Each query returns two results:
+- **Distance-optimised path**: Minimizes total distance (km)
+- **Time-optimised path**: Minimizes total travel time (minutes)
+
+Example output:
+```
+Query:
+  source=10
+  destination=120
+  departure_hour=8
+  avoid_nodes=[11, 12]
+  avoid_edges=[(20, 21), (22, 23)]
+
+Distance-optimised path:
+  Nodes: 10 -> 45 -> 78 -> 120
+  Total distance: 156.234 km
+  Total travel time: 245.6 minutes
+
+Time-optimised path:
+  Nodes: 10 -> 32 -> 89 -> 120
+  Total distance: 172.456 km
+  Total travel time: 198.3 minutes
 ```

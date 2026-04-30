@@ -338,185 +338,7 @@ def run_demo(path_finder: SmartPathFinder, node_count: int, seed: int) -> None:
     )
 
 
-def _all_unique_edges(
-    graph: RoadGraph | CompactRoadGraph,
-) -> List[Tuple[int, int]]:
-    edges: List[Tuple[int, int]] = []
-    seen: Set[Tuple[int, int]] = set()
 
-    if isinstance(graph, RoadGraph):
-        for u in range(graph.node_count):
-            for edge in graph.adjacency[u]:
-                key = (
-                    (u, edge.to_node)
-                    if u < edge.to_node
-                    else (edge.to_node, u)
-                )
-                if key in seen:
-                    continue
-                seen.add(key)
-                edges.append(key)
-        return edges
-
-    for u in range(graph.node_count):
-        for v, _, _ in graph.iter_edges(u):
-            key = (u, v) if u < v else (v, u)
-            if key in seen:
-                continue
-            seen.add(key)
-            edges.append(key)
-    return edges
-
-
-def _get_positions(
-    graph: RoadGraph | CompactRoadGraph,
-) -> List[Tuple[float, float]]:
-    if graph.node_positions is not None:
-        return graph.node_positions
-
-    width = int(sqrt(graph.node_count))
-    if width * width < graph.node_count:
-        width += 1
-
-    positions: List[Tuple[float, float]] = []
-    for node in range(graph.node_count):
-        row = node // width
-        col = node % width
-        positions.append((float(col), float(row)))
-    return positions
-
-
-def render_graph_image(
-    graph: RoadGraph | CompactRoadGraph,
-    output_path: str,
-    image_width: int,
-    image_height: int,
-    distance_path: Optional[PathResult],
-    time_path: Optional[PathResult],
-    source: Optional[int],
-    destination: Optional[int],
-    avoid_nodes: Sequence[int],
-) -> None:
-    try:
-        from PIL import Image, ImageDraw  # type: ignore[import-not-found]
-    except ImportError as exc:
-        raise RuntimeError(
-            "Pillow is required for visualization. "
-            "Install with: pip install Pillow"
-        ) from exc
-
-    if image_width < 300 or image_height < 300:
-        raise ValueError("image size must be at least 300x300")
-
-    positions = _get_positions(graph)
-    xs = [x for x, _ in positions]
-    ys = [y for _, y in positions]
-
-    min_x = min(xs)
-    max_x = max(xs)
-    min_y = min(ys)
-    max_y = max(ys)
-
-    span_x = max(max_x - min_x, 1e-9)
-    span_y = max(max_y - min_y, 1e-9)
-    padding = 30
-
-    def project(node: int) -> Tuple[float, float]:
-        x, y = positions[node]
-        px = padding + (x - min_x) / span_x * (image_width - 2 * padding)
-        py = padding + (y - min_y) / span_y * (image_height - 2 * padding)
-        return px, py
-
-    image = Image.new("RGB", (image_width, image_height), (250, 250, 250))
-    draw = ImageDraw.Draw(image)
-
-    for u, v in _all_unique_edges(graph):
-        ux, uy = project(u)
-        vx, vy = project(v)
-        draw.line((ux, uy, vx, vy), fill=(205, 210, 215), width=1)
-
-    if distance_path is not None and len(distance_path.path_nodes) >= 2:
-        for i in range(len(distance_path.path_nodes) - 1):
-            u = distance_path.path_nodes[i]
-            v = distance_path.path_nodes[i + 1]
-            ux, uy = project(u)
-            vx, vy = project(v)
-            draw.line((ux, uy, vx, vy), fill=(220, 20, 60), width=3)
-
-    if time_path is not None and len(time_path.path_nodes) >= 2:
-        for i in range(len(time_path.path_nodes) - 1):
-            u = time_path.path_nodes[i]
-            v = time_path.path_nodes[i + 1]
-            ux, uy = project(u)
-            vx, vy = project(v)
-            draw.line((ux, uy, vx, vy), fill=(30, 100, 220), width=3)
-
-    avoid_set = set(avoid_nodes)
-    base_radius = 2
-
-    for node in range(graph.node_count):
-        x, y = project(node)
-        color = (70, 70, 70)
-        radius = base_radius
-
-        if node in avoid_set:
-            color = (245, 140, 40)
-            radius = 3
-
-        if source is not None and node == source:
-            color = (50, 170, 70)
-            radius = 5
-
-        if destination is not None and node == destination:
-            color = (180, 40, 40)
-            radius = 5
-
-        draw.ellipse(
-            (x - radius, y - radius, x + radius, y + radius),
-            fill=color,
-            outline=color,
-        )
-
-    image.save(output_path)
-
-
-def run_visualization(
-    path_finder: SmartPathFinder,
-    source: Optional[int],
-    destination: Optional[int],
-    departure_hour: int,
-    avoid_nodes: Sequence[int],
-    avoid_edges: Sequence[Tuple[int, int]],
-    output_image: str,
-    image_width: int,
-    image_height: int,
-) -> None:
-    distance_path: Optional[PathResult] = None
-    time_path: Optional[PathResult] = None
-
-    if source is not None and destination is not None:
-        distance_path, time_path = path_finder.route(
-            source=source,
-            destination=destination,
-            departure_hour=departure_hour,
-            avoid_nodes=avoid_nodes,
-            avoid_edges=avoid_edges,
-        )
-        print_path_result("Distance-optimised path:", distance_path)
-        print_path_result("Time-optimised path:", time_path)
-
-    render_graph_image(
-        graph=path_finder.graph,
-        output_path=output_image,
-        image_width=image_width,
-        image_height=image_height,
-        distance_path=distance_path,
-        time_path=time_path,
-        source=source,
-        destination=destination,
-        avoid_nodes=avoid_nodes,
-    )
-    print(f"Saved visualization image to: {output_image}")
 
 
 def main() -> None:
@@ -545,7 +367,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=("demo", "interactive", "query", "benchmark", "visualize"),
+        choices=("demo", "interactive", "query", "benchmark"),
         default="demo",
         help="execution mode",
     )
@@ -574,24 +396,6 @@ def main() -> None:
         type=int,
         default=50,
         help="number of random queries for benchmark mode",
-    )
-    parser.add_argument(
-        "--output-image",
-        type=str,
-        default="graph_visualization.png",
-        help="output PNG filename for visualize mode",
-    )
-    parser.add_argument(
-        "--image-width",
-        type=int,
-        default=1400,
-        help="visualization image width",
-    )
-    parser.add_argument(
-        "--image-height",
-        type=int,
-        default=900,
-        help="visualization image height",
     )
     parser.add_argument(
         "--graph-structure",
@@ -658,20 +462,6 @@ def main() -> None:
             departure_hour=args.departure_hour,
             avoid_nodes=parse_int_list(args.avoid_nodes),
             avoid_edges=parse_edge_list(args.avoid_edges),
-        )
-        return
-
-    if args.mode == "visualize":
-        run_visualization(
-            path_finder=path_finder,
-            source=args.source,
-            destination=args.destination,
-            departure_hour=args.departure_hour,
-            avoid_nodes=parse_int_list(args.avoid_nodes),
-            avoid_edges=parse_edge_list(args.avoid_edges),
-            output_image=args.output_image,
-            image_width=args.image_width,
-            image_height=args.image_height,
         )
         return
 
