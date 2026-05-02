@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import sqrt
 from random import Random
 from time import perf_counter
+import tracemalloc
 from typing import List, Optional, Sequence, Set, Tuple
 
 from graph_models import CompactRoadGraph, PathResult, RoadGraph
@@ -210,8 +211,12 @@ def run_benchmark(
     print(f"  feasible distance paths={success_distance}/{query_count}")
     print(f"  feasible time paths={success_time}/{query_count}")
     print(
-        "  average runtime per query "
-        f"(both optimisations): {total_distance_mode / query_count:.6f} sec"
+        "  query time (ms): "
+        f"{(total_distance_mode / query_count) * 1000.0:.3f}"
+    )
+    print(
+        "  feasible (%): "
+        f"{((success_distance + success_time) / (2 * query_count)) * 100:.2f}"
     )
 
 
@@ -405,15 +410,21 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    tracemalloc.start()
+
     print(
         "Generating graph with "
         f"{args.nodes:,} nodes (avg_degree={args.avg_degree})..."
     )
+    graph_start = perf_counter()
     graph = generate_large_scale_graph(
         node_count=args.nodes,
         avg_degree=args.avg_degree,
         seed=args.seed,
     )
+    gen_time_ms = (perf_counter() - graph_start) * 1000.0
+    _, peak_bytes = tracemalloc.get_traced_memory()
+    peak_memory_mb = peak_bytes / (1024 * 1024)
     if args.mode != "benchmark" and args.graph_structure == "both":
         raise ValueError(
             "--graph-structure both is only valid in benchmark mode"
@@ -426,6 +437,9 @@ def main() -> None:
             query_count=args.benchmark_queries,
             seed=args.seed + 1000,
         )
+        print(f"Graph generation time (ms): {gen_time_ms:.3f}")
+        print(f"Peak memory (MB): {peak_memory_mb:.3f}")
+        tracemalloc.stop()
         return
 
     if args.graph_structure == "compact":
@@ -445,6 +459,9 @@ def main() -> None:
             seed=args.seed + 1000,
             label=args.graph_structure,
         )
+        print(f"Graph generation time (ms): {gen_time_ms:.3f}")
+        print(f"Peak memory (MB): {peak_memory_mb:.3f}")
+        tracemalloc.stop()
         return
 
     if args.mode == "interactive":
@@ -463,9 +480,15 @@ def main() -> None:
             avoid_nodes=parse_int_list(args.avoid_nodes),
             avoid_edges=parse_edge_list(args.avoid_edges),
         )
+        print(f"Graph generation time (ms): {gen_time_ms:.3f}")
+        print(f"Peak memory (MB): {peak_memory_mb:.3f}")
+        tracemalloc.stop()
         return
 
     run_demo(path_finder, args.nodes, args.seed + 2000)
+    print(f"Graph generation time (ms): {gen_time_ms:.3f}")
+    print(f"Peak memory (MB): {peak_memory_mb:.3f}")
+    tracemalloc.stop()
 
 
 if __name__ == "__main__":
