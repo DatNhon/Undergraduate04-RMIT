@@ -622,7 +622,7 @@ A* with **Landmarks** could be a medium-term optimization:
 
 **Decision:** Separate graph representation, path finding, and CLI code into three modules:
 - `graph_models.py`: Data structures
-- `path_finder.py`: Algorithm
+- `smart_path_finder.py`: Algorithm
 - `app.py`: Generation, benchmarking, visualization
 
 **Rationale:**
@@ -740,7 +740,7 @@ Note: Both representations store identical travel-time data; the difference is m
 - CompactRoadGraph storage: $O(V + E)$
 - Conversion: $O(V + E)$
 
-**`path_finder.py`:**
+**`smart_path_finder.py`:**
 - SmartPathFinder.route(): $O(2(V + E) \log V)$ for both distance and time routes
 
 **`app.py`:**
@@ -1119,7 +1119,7 @@ AI tools enhanced productivity and clarity but remained subordinate to human jud
 7. Project README: `README.txt` (included in submission)
    - CLI usage, modes, and examples
 
-8. Module Docstrings: `graph_models.py`, `path_finder.py`, `app.py`
+8. Module Docstrings: `graph_models.py`, `smart_path_finder.py`, `app.py`
    - Inline documentation and usage examples
 
 ---

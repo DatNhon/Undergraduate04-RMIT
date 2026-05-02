@@ -20,6 +20,13 @@ class PathResult:
 
 class RoadGraph:
     def __init__(self, node_count: int):
+        """Create an adjacency-list based road graph.
+
+        Args:
+            node_count: Number of nodes in the graph.
+
+        The adjacency list maps node id -> list of `Edge` objects.
+        """
         self.node_count = node_count
         self.adjacency: Dict[int, List[Edge]] = {
             node: [] for node in range(node_count)
@@ -33,6 +40,10 @@ class RoadGraph:
         distance_km: float,
         hourly_minutes: Sequence[float],
     ) -> None:
+        """Add an undirected edge (stored as two directed edges).
+
+        Validates that `hourly_minutes` contains exactly 24 values.
+        """
         if u == v:
             return
         if len(hourly_minutes) != 24:
@@ -52,6 +63,10 @@ class RoadGraph:
         v: int,
         new_hourly_minutes: Sequence[float],
     ) -> bool:
+        """Update the hourly travel-time profile for an existing edge.
+
+        Returns True if both directed entries were updated.
+        """
         if len(new_hourly_minutes) != 24:
             raise ValueError("new_hourly_minutes must have exactly 24 values")
 
@@ -65,6 +80,7 @@ class RoadGraph:
         to_node: int,
         hourly_minutes: Tuple[float, ...],
     ) -> bool:
+        """Internal: update one directed adjacency entry if present."""
         neighbours = self.adjacency.get(from_node, [])
         for idx, edge in enumerate(neighbours):
             if edge.to_node == to_node:
@@ -79,6 +95,10 @@ class RoadGraph:
 
 class CompactRoadGraph:
     def __init__(self, node_count: int):
+        """Create a compact forward-star representation for a directed graph.
+
+        Uses parallel arrays and index-chaining for adjacency lists.
+        """
         self.node_count = node_count
         self.head: List[int] = [-1] * node_count
         self.to_node: List[int] = []
@@ -94,6 +114,10 @@ class CompactRoadGraph:
         distance_km: float,
         hourly_minutes: Sequence[float],
     ) -> None:
+        """Append a directed edge to the compact arrays.
+
+        Validates `hourly_minutes` has 24 entries.
+        """
         if len(hourly_minutes) != 24:
             raise ValueError("hourly_minutes must have exactly 24 values")
 
@@ -112,6 +136,7 @@ class CompactRoadGraph:
         distance_km: float,
         hourly_minutes: Sequence[float],
     ) -> None:
+        """Add an undirected edge by inserting two directed edges."""
         if u == v:
             return
         self.add_directed_edge(u, v, distance_km, hourly_minutes)
@@ -121,6 +146,7 @@ class CompactRoadGraph:
         self,
         from_node: int,
     ) -> Iterable[Tuple[int, float, Tuple[float, ...]]]:
+        """Yield (to_node, distance_km, hourly_minutes) for outgoing edges."""
         edge_idx = self.head[from_node]
         while edge_idx != -1:
             yield (
@@ -132,6 +158,10 @@ class CompactRoadGraph:
 
     @classmethod
     def from_road_graph(cls, road_graph: RoadGraph) -> "CompactRoadGraph":
+        """Create a `CompactRoadGraph` from a `RoadGraph`.
+
+        Deduplicates undirected edges while copying.
+        """
         compact = cls(road_graph.node_count)
         compact.node_positions = road_graph.node_positions
         seen: Set[Tuple[int, int]] = set()
