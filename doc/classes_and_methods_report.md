@@ -9,7 +9,7 @@ The project is split into four main Python files:
 - `main.py` is the entry point.
 - `app.py` handles graph generation, command-line parsing, benchmarks, and interactive/query execution.
 - `graph_models.py` defines the graph and result data structures.
-- `path_finder.py` implements the path-search algorithm.
+- `smart_path_finder.py` implements the path-search algorithm.
 
 ## 3. Classes and Methods by File
 
@@ -82,7 +82,7 @@ Methods:
   - Class method that converts a `RoadGraph` into a `CompactRoadGraph`.
   - Deduplicates undirected edges while copying them.
 
-### 3.3 `path_finder.py`
+### 3.3 `smart_path_finder.py`
 
 #### `SmartPathFinder`
 This class implements the routing algorithm and supports both graph representations.

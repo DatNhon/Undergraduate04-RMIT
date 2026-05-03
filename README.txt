@@ -3,7 +3,7 @@ Smart Path Finder
 Submission Contents
 - `main.py` is the launcher for the system.
 - `README.txt` documents setup, execution, input, and output.
-- Source modules: `app.py`, `path_finder.py`, `graph_models.py`.
+- Source modules: `app.py`, `smart_path_finder.py`, `graph_models.py`.
 
 1. Environment Setup
 - Python 3.10 or newer is recommended.

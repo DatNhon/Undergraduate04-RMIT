@@ -25,7 +25,7 @@ The routing problem is therefore not a plain shortest-path problem. It is a time
 The codebase separates graph storage from path search:
 
 - `graph_models.py` contains the graph data structures.
-- `path_finder.py` contains the routing algorithm.
+- `smart_path_finder.py` contains the routing algorithm.
 - `app.py` contains graph generation, benchmarking, and visualization.
 
 Two graph representations are supported:
@@ -149,7 +149,7 @@ The compact version usually performs better in memory-sensitive settings because
 - `graph_models.py`
    - storing the graph: `O(V + E)`
    - converting to compact form: `O(V + E)`
-- `path_finder.py`
+- `smart_path_finder.py`
    - one Dijkstra run: `O((V + E) log V)`
    - two route searches per query: `O(2 * (V + E) log V)`
 - `app.py`

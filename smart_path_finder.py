@@ -8,6 +8,11 @@ from graph_models import CompactRoadGraph, PathResult, RoadGraph
 
 class SmartPathFinder:
     def __init__(self, graph: RoadGraph | CompactRoadGraph):
+        """Initialize with either a `RoadGraph` or `CompactRoadGraph`.
+
+        The `route` method is the primary API used to obtain two
+        optimized paths (distance-optimised and time-optimised).
+        """
         self.graph = graph
 
     def route(
@@ -18,6 +23,12 @@ class SmartPathFinder:
         avoid_nodes: Optional[Iterable[int]] = None,
         avoid_edges: Optional[Iterable[Tuple[int, int]]] = None,
     ) -> Tuple[Optional[PathResult], Optional[PathResult]]:
+        """Compute both distance- and time-optimised routes.
+
+        Returns a tuple: (distance_path, time_path). Each element
+        is a `PathResult` or `None` when no feasible path exists.
+        """
+
         nodes_to_avoid = set(avoid_nodes or [])
         edges_to_avoid = {
             self._normalise_edge(edge[0], edge[1])
@@ -53,6 +64,10 @@ class SmartPathFinder:
         avoid_edges: Set[Tuple[int, int]],
         optimise_for: str,
     ) -> Optional[PathResult]:
+        """Internal Dijkstra implementation supporting time-dependent costs.
+
+        `optimise_for` must be either 'distance' or 'time'.
+        """
         if not (0 <= source < self.graph.node_count):
             raise ValueError("source node is out of range")
         if not (0 <= destination < self.graph.node_count):
@@ -149,6 +164,7 @@ class SmartPathFinder:
         source: int,
         destination: int,
     ) -> List[int]:
+        """Reconstruct the path from `predecessor` links."""
         path: List[int] = []
         current = destination
         while current != -1:
@@ -161,6 +177,7 @@ class SmartPathFinder:
 
     @staticmethod
     def _normalise_edge(u: int, v: int) -> Tuple[int, int]:
+        """Return a canonical (min, max) tuple for an undirected edge."""
         return (u, v) if u < v else (v, u)
 
     def _iter_neighbours(

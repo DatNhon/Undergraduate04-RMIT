@@ -7,7 +7,7 @@ import tracemalloc
 from typing import List, Optional, Sequence, Set, Tuple
 
 from graph_models import CompactRoadGraph, PathResult, RoadGraph
-from path_finder import SmartPathFinder
+from smart_path_finder import SmartPathFinder
 
 
 def generate_large_scale_graph(
@@ -15,6 +15,11 @@ def generate_large_scale_graph(
     avg_degree: int,
     seed: int,
 ) -> RoadGraph:
+    """Generate a synthetic road network.
+
+    Nodes are placed on a noisy grid. Edges connect local neighbours and
+    random long-range links until the desired average degree is reached.
+    """
     if node_count < 2:
         raise ValueError("node_count must be >= 2")
     if avg_degree < 2:
@@ -105,6 +110,7 @@ def generate_large_scale_graph(
 
 
 def parse_int_list(raw_value: str) -> List[int]:
+    """Parse a comma-separated list of integers (empty -> [])."""
     if not raw_value.strip():
         return []
     return [
@@ -115,6 +121,7 @@ def parse_int_list(raw_value: str) -> List[int]:
 
 
 def parse_edge_list(raw_value: str) -> List[Tuple[int, int]]:
+    """Parse a comma-separated list of edges in 'u-v' format."""
     if not raw_value.strip():
         return []
 
@@ -131,6 +138,7 @@ def parse_edge_list(raw_value: str) -> List[Tuple[int, int]]:
 
 
 def print_path_result(label: str, result: Optional[PathResult]) -> None:
+    """Print a `PathResult` to stdout in a compact format."""
     print(label)
     if result is None:
         print("  No feasible path found with given constraints.")
@@ -149,6 +157,7 @@ def run_single_query(
     avoid_nodes: Sequence[int],
     avoid_edges: Sequence[Tuple[int, int]],
 ) -> None:
+    """Execute a single routing query and display both results."""
     print("Query:")
     print(f"  source={source}")
     print(f"  destination={destination}")
@@ -175,6 +184,7 @@ def run_benchmark(
     seed: int,
     label: str,
 ) -> None:
+    """Run `query_count` random routing queries and summarize results."""
     rng = Random(seed)
 
     total_distance_mode = 0.0
@@ -224,6 +234,7 @@ def _same_result(
     left: Optional[PathResult],
     right: Optional[PathResult],
 ) -> bool:
+    """Return True if two `PathResult` objects are numerically equal."""
     if left is None or right is None:
         return left is None and right is None
     return (
@@ -238,6 +249,7 @@ def run_benchmark_comparison(
     query_count: int,
     seed: int,
 ) -> None:
+    """Compare runtime and result consistency between representations."""
     list_finder = SmartPathFinder(list_graph)
     compact_graph = CompactRoadGraph.from_road_graph(list_graph)
     compact_finder = SmartPathFinder(compact_graph)
@@ -296,6 +308,7 @@ def run_benchmark_comparison(
 
 
 def interactive_mode(path_finder: SmartPathFinder) -> None:
+    """Prompt the user for query parameters and run a single query."""
     print("Enter query values.")
     source = int(input("source node: ").strip())
     destination = int(input("destination node: ").strip())
@@ -317,6 +330,7 @@ def interactive_mode(path_finder: SmartPathFinder) -> None:
 
 
 def run_demo(path_finder: SmartPathFinder, node_count: int, seed: int) -> None:
+    """Generate and execute a random demo query (for quick checks)."""
     rng = Random(seed)
     source = rng.randrange(node_count)
     destination = rng.randrange(node_count)
